@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengambil Hadiah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+        }
+        .glow {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+        }
+        .tech-border {
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center text-gray-200">
+    <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl w-full max-w-4xl flex tech-border glow">
+        <div class="w-1/2 p-6 border-r border-gray-700">
+            <h1 class="text-3xl font-bold text-blue-400 mb-6 flex items-center">
+                <span class="mr-2">🎁</span> Pengambil Hadiah
+            </h1>
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-blue-300">Input API Keys</h2>
+                <label class="block text-sm font-medium text-gray-400 mt-2">API Addresses:</label>
+                <textarea id="apiKeys" rows="4" class="w-full mt-1 p-3 bg-gray-800 text-gray-200 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1
+2
+3"></textarea>
+            </div>
+            <div class="mb-6">
+                <button id="readApiBtn" class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 hover-scale">Load API Keys</button>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-400">Reward Link:</label>
+                <input id="linkInput" type="text" class="w-full mt-1 p-3 bg-gray-800 text-gray-200 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="https://stake1022.com/tr?promo=TREFExistingv0010S01D01NVBSG">
+            </div>
+            <div>
+                <button id="claimBtn" class="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 hover-scale">Claim Rewards</button>
+            </div>
+        </div>
+        <div class="w-1/2 p-6">
+            <h2 class="text-lg font-semibold text-blue-300 mb-4">Claim Results</h2>
+            <div class="bg-gray-800 p-4 rounded-lg h-96 overflow-y-auto">
+                <ul id="resultsList" class="space-y-3">
+                    <!-- Results will be dynamically added here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKeysInput = document.getElementById('apiKeys');
+        const readApiBtn = document.getElementById('readApiBtn');
+        const linkInput = document.getElementById('linkInput');
+        const claimBtn = document.getElementById('claimBtn');
+        const resultsList = document.getElementById('resultsList');
+
+        let apiKeys = [];
+
+        readApiBtn.addEventListener('click', () => {
+            const input = apiKeysInput.value.trim();
+            apiKeys = input.split('\n').filter(key => key.trim() !== '');
+            if (apiKeys.length > 0) {
+                resultsList.innerHTML = '';
+                apiKeys.forEach((key, index) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${index + 1}. ${key}: Pending`;
+                    li.className = 'text-sm text-gray-300';
+                    resultsList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = 'No API keys provided!';
+                li.className = 'text-sm text-red-400';
+                resultsList.appendChild(li);
+            }
+        });
+
+        claimBtn.addEventListener('click', async () => {
+            if (apiKeys.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'Please load API keys first!';
+                li.className = 'text-sm text-red-400';
+                resultsList.innerHTML = '';
+                resultsList.appendChild(li);
+                return;
+            }
+
+            const link = linkInput.value.trim();
+            if (!link) {
+                const li = document.createElement('li');
+                li.textContent = 'Please provide a link!';
+                li.className = 'text-sm text-red-400';
+                resultsList.innerHTML = '';
+                resultsList.appendChild(li);
+                return;
+            }
+
+            const resultItems = resultsList.getElementsByTagName('li');
+            for (let i = 0; i < apiKeys.length; i++) {
+                const apiKey = apiKeys[i];
+                resultItems[i].textContent = `${i + 1}. ${apiKey}: Processing...`;
+                resultItems[i].className = 'text-sm text-yellow-400';
+
+                try {
+                    const response = await fetch('/api/claim', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ api_keys: [apiKey], link })
+                    });
+                    const result = await response.json();
+                    resultItems[i].textContent = `${i + 1}. ${apiKey}: ${result[0].status === 'success' ? 'Success' : 'Error'} - ${result[0].message}`;
+                    resultItems[i].className = `text-sm ${result[0].status === 'success' ? 'text-green-400' : 'text-red-400'}`;
+                } catch (error) {
+                    resultItems[i].textContent = `${i + 1}. ${apiKey}: Error - Connection failed`;
+                    resultItems[i].className = 'text-sm text-red-400';
+                }
+                await new Promise(resolve => setTimeout(resolve, 500)); // Delay for readability
+            }
+        });
+    </script>
+</body>
+</html>
