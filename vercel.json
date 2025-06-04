@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/claim.js": {
+      "memory": 128,
+      "maxDuration": 10
+    }
+  }
+}
