@@ -1,5 +1,5 @@
 {
-  "name": "reward-claim-app",
+  "name": "pengambil-hadiah-web",
   "version": "1.0.0",
   "description": "A web application to automate claiming rewards from stake1022.com giveaways.",
   "dependencies": {

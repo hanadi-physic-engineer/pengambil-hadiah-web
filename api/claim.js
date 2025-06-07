@@ -1,13 +1,10 @@
 const fetch = require('node-fetch');
 
-exports.handler = async (event, context) => {
-    const { api_keys, link } = JSON.parse(event.body);
+module.exports = async (req, res) => {
+    const { api_keys, link } = req.body;
 
     if (!api_keys || !link) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Missing api_keys or link' })
-        };
+        return res.status(400).json({ error: 'Missing api_keys or link' });
     }
 
     const results = [];
@@ -42,8 +39,5 @@ exports.handler = async (event, context) => {
         await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate delay
     }
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify(results)
-    };
+    res.status(200).json(results);
 };
